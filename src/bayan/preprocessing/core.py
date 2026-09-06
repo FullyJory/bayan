@@ -29,8 +29,7 @@ def normalize(text: str) -> str:
 def mask_pii(text: str) -> str:
     """Mask supported phone numbers and Saudi national-ID-shaped values."""
     # Mask Saudi phone numbers
-    text = re.sub(r"(?<!\d)05\d{8}(?!\d)", "<PHONE>", text)
-
+text = re.sub(r"(?<!\d)(?:\+966|966|0)5\d{8}(?!\d)", "<PHONE>", text)
     # Mask Saudi national-ID-shaped values
     text = re.sub(r"(?<!\d)[12]\d{9}(?!\d)", "<NATIONAL_ID>", text)
 
