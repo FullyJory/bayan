@@ -5,40 +5,40 @@ Inspect `data/raw/bayan_raw_sample.csv` and document at least six defect classes
 For each one record: example, why it matters, and clean/preserve/task-dependent.
 
 ### Defect 1
-- Class:
-- Example:
-- Why it matters:
-- Decision:
+- Class: Repeated characters
+- Example: لووووسمحت
+- Why it matters:Repeated characters add noise and increase the number of tokens without adding much meaning.
+- Decision: clean 
 
 ### Defect 2
-- Class:
-- Example:
-- Why it matters:
-- Decision:
+- Class: Emoji
+- Example: 
+- Why it matters: Emojis can express sentiment and user frustration, which may be useful for downstream classification.
+- Decision: Preserve
 
 ### Defect 3
-- Class:
-- Example:
-- Why it matters:
-- Decision:
+- Class: Personally identifiable information (PII)
+- Example: 0551234567
+- Why it matters: Phone numbers and national-ID-shaped values are sensitive information and should not be exposed to the model.
+- Decision: mask 
 
 ### Defect 4
-- Class:
-- Example:
-- Why it matters:
-- Decision:
+- Class: Tatweel
+- Example: الطريـق
+- Why it matters: Tatweel is a visual elongation that can create unnecessary token variations.
+- Decision: Clean
 
 ### Defect 5
-- Class:
-- Example:
-- Why it matters:
-- Decision:
+- Class: HTML remnants
+- Example: <br>
+- Why it matters: HTML markup is not part of the complaint meaning and can introduce unnecessary tokens.
+- Decision: Clean 
 
 ### Defect 6
-- Class:
-- Example:
-- Why it matters:
-- Decision:
+- Class: repeated words
+- Example: My My Licence licence request
+- Why it matters: Repeated words add noise and may increase the number of tokens without adding meaningful information.
+- Decision: Clean
 
 ## Lab 2 — Parameter audit
 | Checkpoint | Total params | Embeddings % | Other notes |
