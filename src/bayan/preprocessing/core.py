@@ -1,21 +1,45 @@
 """Lab 1 starter: versioned bilingual preprocessing for Bayan."""
 
+import re
+import unicodedata
+
 PREPROC_VERSION = "1.2.0"
 
 
 def normalize(text: str) -> str:
     """Return deterministic Bayan normalisation while preserving task signal."""
-    # TODO(Lab 1): implement the course normalisation contract.
-    raise NotImplementedError("Implement normalize() in Lab 1")
+    # Unicode normalization
+    text = unicodedata.normalize("NFKC", text)
+
+    # Remove Tatweel
+    text = text.replace("ـ", "")
+
+    # Remove HTML remnants
+    text = re.sub(r"<[^>]+>", " ", text)
+
+    # Reduce repeated characters
+    text = re.sub(r"(.)\1{2,}", r"\1\1", text)
+
+    # Clean repeated whitespace
+    text = re.sub(r"\s+", " ", text).strip()
+
+    return text
 
 
 def mask_pii(text: str) -> str:
     """Mask supported phone numbers and Saudi national-ID-shaped values."""
-    # TODO(Lab 1): replace supported PII with <PHONE> / <NATIONAL_ID>.
-    raise NotImplementedError("Implement mask_pii() in Lab 1")
+    # Mask Saudi phone numbers
+    text = re.sub(r"(?<!\d)05\d{8}(?!\d)", "<PHONE>", text)
+
+    # Mask Saudi national-ID-shaped values
+    text = re.sub(r"(?<!\d)[12]\d{9}(?!\d)", "<NATIONAL_ID>", text)
+
+    return text
 
 
 def preprocess(text: str) -> str:
     """Apply the shared train/eval/serve preprocessing contract."""
-    # TODO(Lab 1): compose masking and normalisation in the intended order.
-    raise NotImplementedError("Implement preprocess() in Lab 1")
+    text = mask_pii(text)
+    text = normalize(text)
+
+    return text
