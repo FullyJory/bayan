@@ -107,37 +107,22 @@
               "is_impossible": false
             },
             {
-              "id": "QA-0010",
-              "question": "How long does Service 01 take?",
-              "answers": [
-                {
-                  "text": "2 business days",
-                  "answer_start": 63
-                }
-              ],
-              "is_impossible": false
+              "id": "QA-0013",
+              "question": "What is the walk-in office address for Service 01?",
+              "answers": [],
+              "is_impossible": true
             },
             {
-              "id": "QA-0011",
-              "question": "What is the fee for Service 01?",
-              "answers": [
-                {
-                  "text": "50 SAR",
-                  "answer_start": 99
-                }
-              ],
-              "is_impossible": false
+              "id": "QA-0014",
+              "question": "What is the walk-in office address for Service 01?",
+              "answers": [],
+              "is_impossible": true
             },
             {
-              "id": "QA-0012",
-              "question": "Where is the application for Service 01 submitted?",
-              "answers": [
-                {
-                  "text": "Bayan portal",
-                  "answer_start": 146
-                }
-              ],
-              "is_impossible": false
+              "id": "QA-0015",
+              "question": "What is the walk-in office address for Service 01?",
+              "answers": [],
+              "is_impossible": true
             }
           ]
         }

@@ -59,3 +59,18 @@
 - HTTP p99, 16 concurrent:
 - classifier quantisation decision:
 - NER quantisation decision:
+
+### NER
+
+- Model: xlm-roberta-base
+- Task: Named Entity Recognition
+- Evaluation: seqeval entity-level F1
+- Validation F1: 1.0000
+- Test Entity-level F1: 1.0000
+- Training epochs: 3
+- Learning rate: 2e-5
+- Train batch size: 16
+- Eval batch size: 32
+- Saved artifact: artifacts/ner
+- Target F1: >= 0.80
+- Target achieved: Yes
