@@ -24,9 +24,9 @@
 ## Lab 4 — Arabic model bake-off
 | Checkpoint | macro-F1 all | Gulf | MSA | AR fertility |
 |---|---:|---:|---:|---:|
-| multilingual incumbent | | | | |
-| Arabic dialect-aware | | | | |
-| optional third model | | | | |
+| CAMeLBERT-mix | 1.0000 | 1.0000 | 1.0000 | 1.4064 |
+| CAMeLBERT-DA | 1.0000 | 1.0000 | 1.0000 | 1.4064 |
+| MARBERT (optional, not run) | — | — | — | — |
 
 ## Lab 5 — Search
 | Configuration | recall@10 | MRR@10 | p50 latency/query |
@@ -74,3 +74,27 @@
 - Saved artifact: artifacts/ner
 - Target F1: >= 0.80
 - Target achieved: Yes
+
+
+### Lab 4 — NER Clitic Segmentation
+
+- Base model: xlm-roberta-base
+- Unsegmented LOCATION recall: 1.0000
+- Segmented LOCATION recall: 1.0000
+- LOCATION recall delta: +0.0000
+- Segmentation scheme: CAMeL Tools d3tok
+- Target improvement: approximately +4 recall points
+- Target achieved: No (ceiling effect)
+- Interpretation: The unsegmented baseline already achieved perfect LOCATION recall on the supplied dataset, leaving no room for a measurable recall improvement from clitic segmentation.
+
+
+### Lab 4 — Arabic Bake-off Result
+
+- Evaluation split: reproducible 80/20 split stratified by topic and dialect region
+- Evaluation examples: 1,440 (960 Gulf; 480 MSA)
+- CAMeLBERT-mix Gulf Macro-F1: 1.0000
+- CAMeLBERT-DA Gulf Macro-F1: 1.0000
+- Gulf Macro-F1 delta (DA vs mix): +0.0000
+- Target improvement: >= +0.04 Gulf Macro-F1
+- Target achieved: No (ceiling effect)
+- Interpretation: Both Arabic-centric checkpoints achieved perfect Macro-F1 on all, Gulf, and MSA slices, so the supplied dataset does not provide headroom to demonstrate a dialect-aware performance gain.

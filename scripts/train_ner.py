@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 from datasets import Dataset, DatasetDict
-from seqeval.metrics import f1_score
+from seqeval.metrics import f1_score, classification_report
 from sklearn.model_selection import train_test_split
 from transformers import (
     AutoModelForTokenClassification,
@@ -21,7 +21,7 @@ from bayan.models.ner import align_labels
 
 
 CHECKPOINT = "xlm-roberta-base"
-DATA_PATH = "data/models/bayan_ner.conll"
+DATA_PATH = "data/models/bayan_ner_segmented.conll"
 
 
 def parse_args():
@@ -163,11 +163,21 @@ def main():
             true_predictions.append(pred_labels)
             true_references.append(ref_labels)
 
+        report = classification_report(
+            true_references,
+            true_predictions,
+            output_dict=True,
+            zero_division=0,
+        )
+
+        location_recall = report.get("LOCATION", {}).get("recall", 0.0)
+
         return {
             "f1": f1_score(
                 true_references,
                 true_predictions,
-            )
+            ),
+            "location_recall": location_recall,
         }
 
     training_args = TrainingArguments(
@@ -201,6 +211,7 @@ def main():
 
     print("\n=== NER Test Results ===")
     print(f"Entity-level F1: {results['eval_f1']:.4f}")
+    print(f"LOCATION recall: {results['eval_location_recall']:.4f}")
 
     trainer.save_model(str(output_dir))
     tokenizer.save_pretrained(str(output_dir))

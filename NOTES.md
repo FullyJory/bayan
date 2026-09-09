@@ -47,5 +47,5 @@ For each one record: example, why it matters, and clean/preserve/task-dependent.
 | CAMeLBERT | | | |
 
 ## Lab 4 — Dialect audit
-- Distribution:
-- One-sentence implication for MSA-only evaluation:
+- Distribution: Gulf — 4,800 (66.7%); MSA — 2,400 (33.3%); total Arabic rows — 7,200.
+- One-sentence implication for MSA-only evaluation: Evaluating only on MSA would not represent the actual Arabic data distribution, because two-thirds of the Arabic slice is Gulf dialect, and could therefore overestimate performance on real Gulf-language inputs.
