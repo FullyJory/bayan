@@ -43,9 +43,13 @@
 ## Lab 6 — Evaluation
 | Model | Aggregate macro-F1 [CI] | Gulf [CI] | Invariance pass | MFT pass |
 |---|---|---|---:|---:|
-| topic classifier | | | | |
+| topic classifier | | | 70.0% | 100.0% |
 | dialect-aware | | | | |
 
+- Behavioural invariance: 140/200 passed (70.0%), below the approximate 95% course target.
+- Minimum-functionality tests: 16/16 passed (100.0%), above the approximate 90% course target.
+- Directional tests: not applicable to the Lab 3A topic classifier because the supplied directional skeletons require sentiment behaviour, while the classifier exposes topic labels only.
+- Invariance failure analysis: ambiguous generic service statements changed between `digital_services` and `lighting` after otherwise irrelevant location/time substitutions, indicating sensitivity to contextual terms.
 - paired comparison verdict:
 - error taxonomy top categories:
 - top-3 prioritised fixes:
