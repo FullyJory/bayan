@@ -2005,3 +2005,8 @@ Data → Preprocessing → Transformer Models → Arabic Handling
 ```
 
 Build it one checkpoint at a time. Measure everything that matters. Keep the evidence. 🚀
+
+
+
+
+https://github.com/SDAIAAcademy
