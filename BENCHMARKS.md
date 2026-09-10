@@ -57,14 +57,24 @@
 ## Lab 7 — Optimisation ladder
 | Rung | p50 | p99 | quality metric / paired Δ | Artefact size |
 |---|---:|---:|---|---:|
-| fp32 torch @512 padded | | | | |
-| fp32 torch @128 dynamic | | | | |
-| ONNX fp32 @128 | | | | |
-| ONNX INT8 @128 | | | | |
+| fp32 torch @512 padded | not completed | not completed | baseline run was impractically slow on Colab CPU | |
+| fp32 torch @128 dynamic | not completed | not completed | not completed | |
+| ONNX fp32 @128 | 49.60 ms | 100.82 ms | reference for ONNX quantisation comparison | |
+| ONNX INT8 @128 | 25.19 ms | 49.10 ms | 100/100 prediction agreement with ONNX fp32 | |
 
-- HTTP p99, 16 concurrent:
-- classifier quantisation decision:
-- NER quantisation decision:
+- ONNX INT8 p50 speed-up over ONNX fp32: 1.97x
+- Paired prediction agreement: 100/100 (100%)
+- Observed prediction tax on paired 100-example serving sample: 0 disagreements
+- HTTP load test: hey, 60.29 s, 16 concurrent clients, 3,161 requests
+- HTTP throughput: 52.43 requests/sec
+- HTTP p50, 16 concurrent: 287.9 ms
+- HTTP p99, 16 concurrent: 488.6 ms
+- HTTP errors: 0 (3,161/3,161 returned HTTP 200)
+- HTTP p99 target <= 40 ms: not achieved on the Colab CPU environment
+- Classifier bare p99 target <= 25 ms: not achieved (measured INT8 p99 49.10 ms)
+- Classifier speed-up target >= 6x: not achieved (measured 1.97x)
+- classifier quantisation decision: select ONNX INT8; it reduced p50/p99 substantially while preserving all predictions in the paired 100-example check.
+- NER quantisation decision: not measured in the current runtime because the previously trained NER artefact was unavailable; no unsupported INT8 deployment decision is claimed.
 
 ### NER
 
