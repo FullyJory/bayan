@@ -1,117 +1,910 @@
 # Bayan | بيان
-## SDA-AIE-211 — Natural Language Processing with Transformers
 
-> **From raw bilingual text to a working NLP service — one lab at a time.**
->
-> في هذا المشروع ما راح نبني 7 تمارين منفصلة. راح نطوّر **Bayan** خطوة بخطوة: من raw Arabic/English text، إلى preprocessing وTransformers وfine-tuning وsemantic search وevaluation، ثم نختم بخدمة FastAPI محسّنة وقابلة للقياس.
+### Bilingual Arabic–English Citizen Feedback Intelligence System
+
+**Bayan (بيان)** is an end-to-end Natural Language Processing (NLP) system designed to understand, analyze, and retrieve information from **Arabic and English citizen feedback**.
+
+The project combines multilingual preprocessing, Transformer-based language models, Arabic-aware NLP, Named Entity Recognition (NER), extractive Question Answering (QA), semantic search, systematic model evaluation, inference optimization, and API serving within a unified engineering pipeline.
+
+Bayan was developed by **Jory Alshaalan** as part of **SDA-AIE-211 — Natural Language Processing with Transformers** at **SDAIA Academy**, part of the **Saudi Data & AI Authority (SDAIA)**.
 
 ---
 
-# 🚀 What are we building?
+## About Bayan
 
-**Bayan (بيان)** is a bilingual citizen-feedback intelligence service for Arabic and English text.
+Citizen feedback is rarely clean or uniform. A single message may contain Arabic, English, dialectal expressions, spelling variations, personally identifiable information, informal language, emojis, or noisy formatting.
 
-By the end of the course, this repository should be able to:
+Bayan is designed to process this type of bilingual input and transform it into structured and useful information.
 
-- 🧹 preprocess Arabic + English text consistently
-- 🔐 mask PII before model use
-- 🧠 classify feedback topics/sentiment
-- 🏷️ extract entities with NER
-- ❓ handle extractive QA with honest no-answer behaviour
-- 🔎 retrieve similar historical cases using semantic search
-- 📊 evaluate models with slices, confidence intervals, and behavioural tests
-- ⚡ optimise inference with ONNX + INT8
-- 🌐 serve the final pipeline through FastAPI
+The system provides several complementary NLP capabilities:
+
+- Arabic and English text preprocessing
+- Personally Identifiable Information (PII) masking
+- Topic classification
+- Named Entity Recognition (NER)
+- Extractive Question Answering
+- Arabic-specific normalization
+- Dialect-aware evaluation
+- Bilingual semantic search
+- Cross-encoder re-ranking
+- Confidence-aware evaluation
+- Behavioural testing
+- Model cards and error analysis
+- ONNX inference optimization
+- INT8 quantization
+- FastAPI-based model serving
+- Production-oriented latency and load testing
+
+Instead of treating these capabilities as separate experiments, Bayan connects them into a single NLP engineering workflow.
+
+---
+
+# System Architecture
 
 ```text
-Raw Citizen Feedback
-        ↓
-Versioned Preprocessing
-        ↓
-Topic Classification / NER / QA
-        ↓
-Arabic-aware Model Decisions
-        ↓
-Semantic Search → FAISS → Re-ranking
-        ↓
-Evaluation + Model Cards + Benchmarks
-        ↓
-ONNX / INT8 Optimisation
-        ↓
-FastAPI Bayan Service
+                 Raw Citizen Feedback
+                  Arabic / English
+                         │
+                         ▼
+              ┌─────────────────────┐
+              │    Preprocessing    │
+              │ Normalization + PII │
+              └──────────┬──────────┘
+                         │
+                         ▼
+              ┌─────────────────────┐
+              │ Transformer Models  │
+              └──────────┬──────────┘
+                         │
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+   Classification       NER             QA
+          │              │              │
+          └──────────────┼──────────────┘
+                         │
+                         ▼
+              ┌─────────────────────┐
+              │   Arabic-Aware NLP  │
+              │ Dialect + Segments  │
+              └──────────┬──────────┘
+                         │
+                         ▼
+              ┌─────────────────────┐
+              │   Semantic Search   │
+              │ Bi-Encoder + FAISS  │
+              └──────────┬──────────┘
+                         │
+                         ▼
+              ┌─────────────────────┐
+              │ Cross-Encoder       │
+              │ Re-ranking          │
+              └──────────┬──────────┘
+                         │
+                         ▼
+              ┌─────────────────────┐
+              │ Evaluation & Model  │
+              │ Quality Analysis    │
+              └──────────┬──────────┘
+                         │
+                         ▼
+              ┌─────────────────────┐
+              │ ONNX / INT8         │
+              │ Optimization        │
+              └──────────┬──────────┘
+                         │
+                         ▼
+              ┌─────────────────────┐
+              │   FastAPI Service   │
+              └─────────────────────┘
 ```
 
 ---
 
-# 🗺️ Course Roadmap
+# Core Capabilities
 
-| Day | Lab | Main outcome |
-|---|---|---|
-| **Day 1** | Lab 1 | Bilingual preprocessing + tokenizer decision |
-| **Day 1** | Lab 2 | Transformer attention from scratch + diagnostics |
-| **Day 2** | Lab 3A | Topic classifier that beats TF-IDF baseline |
-| **Day 2** | Lab 3B | NER + extractive QA |
-| **Day 3** | Lab 4 | Arabic normalisation + dialect-aware model |
-| **Day 3** | Lab 5 | Bilingual semantic search |
-| **Day 3** | Lab 6 | Honest evaluation report + model cards |
-| **Day 4** | Lab 7 | ONNX / INT8 optimisation + serving |
-| **Day 4** | Capstone | Integrate everything into one Bayan service |
+## 1. Bilingual Text Preprocessing
 
-> **Important:** Keep yesterday's work. Every lab builds evidence and components that later labs reuse.
+Bayan provides a shared preprocessing pipeline for **Arabic and English text**.
+
+Real-world citizen feedback can contain inconsistent Unicode forms, repeated characters, unnecessary whitespace, Arabic tatweel, HTML remnants, emojis, code-switching, and sensitive personal information.
+
+The preprocessing layer standardizes the input before it reaches downstream models while preserving useful linguistic information.
+
+The pipeline handles:
+
+- Unicode normalization
+- Arabic and English text
+- Arabic tatweel removal
+- Repeated-character normalization
+- Whitespace cleanup
+- Code-switched Arabic/English input
+- Emoji preservation
+- HTML remnants
+- Sentence segmentation
+
+This shared preprocessing contract is reused across the system to reduce inconsistencies between model training and serving.
 
 ---
 
-# 📁 Repository Structure
+## 2. Privacy and PII Masking
+
+Citizen feedback may contain sensitive information.
+
+Bayan includes a dedicated **PII masking layer** that identifies and masks sensitive patterns before model processing.
+
+Examples include:
+
+- Phone numbers
+- National-ID-shaped sequences
+- Other structured personal identifiers covered by the preprocessing contract
+
+The objective is to minimize unnecessary exposure of personal information while retaining the linguistic context required by downstream NLP models.
+
+---
+
+# Transformer Foundation
+
+Bayan uses Transformer-based architectures as the foundation for its language understanding components.
+
+The project also includes a lower-level implementation and analysis of Transformer attention mechanisms, including:
+
+- Scaled dot-product attention
+- Query, Key, and Value representations
+- Multi-Head Attention
+- Attention masking
+- Causal masking
+- Padding-mask behaviour
+- Transformer parameter analysis
+
+The attention mechanism follows:
 
 ```text
-SDA-AIE-211-Bayan/
+Q × Kᵀ
+   │
+   ▼
+Scale by √dₖ
+   │
+   ▼
+Apply Mask
+   │
+   ▼
+Softmax
+   │
+   ▼
+Attention Weights × V
+```
+
+Attention diagnostics are also used to investigate behaviours such as padding leakage and attention concentration.
+
+---
+
+# Tokenization and Multilingual Model Selection
+
+Arabic and English have substantially different tokenization characteristics.
+
+A tokenizer that performs efficiently for English may fragment Arabic words excessively, while an Arabic-specific tokenizer may perform poorly on English input.
+
+Bayan therefore evaluates multiple Transformer tokenizers using measurable evidence.
+
+The evaluated tokenizer families include:
+
+- `bert-base-multilingual-cased`
+- `xlm-roberta-base`
+- `CAMeL-Lab/bert-base-arabic-camelbert-mix`
+- `distilbert-base-uncased`
+
+The comparison considers:
+
+- Arabic token fertility
+- English token fertility
+- Sequence lengths
+- p95 sequence length
+
+Based on the bilingual tokenizer audit, **XLM-RoBERTa (`xlm-roberta-base`)** was selected as the primary multilingual checkpoint because it provided a strong balance across both Arabic and English.
+
+Measured tokenizer fertility:
+
+| Tokenizer | Arabic Fertility | English Fertility |
+|---|---:|---:|
+| mBERT | 2.153 | 1.510 |
+| XLM-R | 1.672 | 1.434 |
+| CAMeLBERT | 1.405 | 2.705 |
+| DistilBERT | 4.527 | 1.298 |
+
+Measured p95 sequence lengths:
+
+| Tokenizer | Arabic p95 | English p95 |
+|---|---:|---:|
+| mBERT | 25 | 23 |
+| XLM-R | 19 | 21 |
+| CAMeLBERT | 18 | 36 |
+| DistilBERT | 45 | 19 |
+
+These measurements support using XLM-R as a balanced bilingual model rather than selecting a checkpoint based only on popularity or aggregate performance.
+
+---
+
+# Topic Classification
+
+Bayan includes a Transformer-based **topic classifier** for categorizing citizen feedback.
+
+The classification pipeline supports bilingual Arabic and English input and assigns feedback to service-related categories.
+
+The dataset contains topics including:
+
+- Billing
+- Digital services
+- Licensing
+- Lighting
+- Parks
+- Roads
+- Waste
+- Water
+
+A traditional **TF-IDF + LinearSVC** model is used as a baseline before Transformer fine-tuning.
+
+The dataset splitting strategy is group-aware, preventing feedback from the same citizen from leaking between training, validation, and test sets.
+
+### Classification Results
+
+The measured TF-IDF baseline achieved:
+
+```text
+Macro-F1: 1.0000
+```
+
+The fine-tuned XLM-R classifier also achieved:
+
+```text
+Test Macro-F1: 1.0000
+```
+
+Because the supplied dataset is highly template-like and contains strong lexical topic cues, the classical baseline already reached the metric ceiling. Consequently, the intended improvement target over the baseline could not be demonstrated numerically.
+
+This limitation is documented rather than artificially modifying the evaluation protocol.
+
+---
+
+# Named Entity Recognition
+
+Bayan includes a **Named Entity Recognition (NER)** system for extracting structured information from citizen feedback.
+
+The NER pipeline addresses an important Transformer challenge: labels may originally exist at the word level while Transformer tokenizers split words into multiple subword tokens.
+
+Bayan therefore implements explicit **BIO-label alignment** between words and subword tokens.
+
+The implementation handles:
+
+- Word-to-subword alignment
+- BIO labels
+- Non-first subword masking
+- Arabic tokenization behaviour
+- Entity-level evaluation
+
+The NER model is evaluated using entity-level metrics through `seqeval`.
+
+### NER Result
+
+The trained NER system achieved:
+
+```text
+Entity-level F1: 1.0000
+```
+
+The project additionally evaluates Arabic segmentation and its effect on NER behaviour.
+
+---
+
+# Extractive Question Answering
+
+Bayan includes an **extractive Question Answering (QA)** component.
+
+Given a question and supporting context, the system identifies the most appropriate answer span from the context.
+
+The QA post-processing logic validates candidate spans and prevents invalid selections.
+
+A key design requirement is **honest no-answer behaviour**.
+
+If the context does not contain a valid answer, Bayan can return:
+
+```text
+answer = None
+```
+
+instead of forcing an unsupported answer.
+
+### QA Validation
+
+The QA smoke evaluation includes both answerable and unanswerable examples.
+
+Measured result:
+
+```text
+Answerable:
+9 / 9 correct spans
+
+Unanswerable:
+3 / 3 correctly returned no answer
+```
+
+---
+
+# Arabic-Aware NLP
+
+Arabic requires language-specific processing beyond a generic multilingual pipeline.
+
+Bayan includes a dedicated Arabic processing layer designed to investigate normalization, morphology, segmentation, and dialect variation.
+
+---
+
+## Arabic Normalization
+
+The Arabic normalization component provides versioned normalization profiles.
+
+It handles Arabic-specific orthographic variation while allowing the original display text to remain separate from the model-normalized representation.
+
+The normalization implementation was validated against the supplied Arabic normalization contract:
+
+```text
+30 tests passed
+```
+
+---
+
+## Dialect Analysis
+
+Bayan does not assume that evaluation on Modern Standard Arabic is sufficient to represent Arabic performance.
+
+The Arabic dataset was analyzed by dialect region.
+
+Measured distribution:
+
+```text
+Arabic examples: 7,200
+
+Gulf Arabic:
+4,800 examples
+66.7%
+
+MSA:
+2,400 examples
+33.3%
+```
+
+This distribution makes dialect-specific evaluation important because aggregate Arabic metrics can hide performance differences between MSA and Gulf Arabic.
+
+---
+
+## Arabic Segmentation
+
+The Arabic pipeline also incorporates morphological segmentation using CAMeL Tools.
+
+Segmentation is evaluated as part of the NER pipeline to determine whether Arabic clitic handling improves entity recognition.
+
+In the evaluated dataset, both segmented and unsegmented NER configurations reached the metric ceiling:
+
+```text
+Entity F1:        1.0000
+LOCATION Recall:  1.0000
+```
+
+Therefore, the expected improvement from segmentation could not be demonstrated on this dataset.
+
+---
+
+## Arabic Model Comparison
+
+Arabic-focused Transformer checkpoints were also compared across dialect slices.
+
+The evaluation included:
+
+- Overall Arabic
+- Gulf Arabic
+- Modern Standard Arabic
+
+CAMeLBERT variants were evaluated to determine whether dialect specialization provided measurable benefits.
+
+In the available benchmark, both evaluated configurations reached:
+
+```text
+All Arabic Macro-F1: 1.0000
+Gulf Macro-F1:       1.0000
+MSA Macro-F1:        1.0000
+```
+
+The result again demonstrates a ceiling effect in the supplied dataset rather than evidence that dialect variation is irrelevant.
+
+---
+
+# Bilingual Semantic Search
+
+Bayan includes a semantic search engine for retrieving historical citizen cases related to an incoming query.
+
+The search system uses a **two-stage retrieval architecture**.
+
+```text
+User Query
+    │
+    ▼
+Multilingual Bi-Encoder
+    │
+    ▼
+Query Embedding
+    │
+    ▼
+FAISS Vector Search
+    │
+    ▼
+Top Candidate Cases
+    │
+    ▼
+Cross-Encoder
+    │
+    ▼
+Re-ranked Results
+```
+
+---
+
+## Bi-Encoder Retrieval
+
+Bayan uses:
+
+```text
+sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+```
+
+to generate multilingual dense embeddings.
+
+The historical corpus contains:
+
+```text
+20,000 cases
+```
+
+with:
+
+```text
+Embedding dimension: 384
+```
+
+Vectors are explicitly **L2-normalized** before being inserted into the FAISS index.
+
+The index also stores a manifest containing information such as:
+
+- Embedding model
+- Preprocessing version
+- Number of vectors
+- Embedding dimension
+
+This prevents incompatible preprocessing or model versions from being silently combined.
+
+---
+
+## Cross-Encoder Re-ranking
+
+Initial semantic-search candidates are re-ranked using:
+
+```text
+cross-encoder/mmarco-mMiniLMv2-L12-H384-v1
+```
+
+The cross-encoder evaluates the query and candidate jointly to provide a more precise ranking than embedding similarity alone.
+
+---
+
+## No-Result Behaviour
+
+Semantic retrieval systems should not always return an answer.
+
+Bayan therefore includes a configurable minimum relevance score.
+
+When no candidate exceeds the required threshold, the search service can return an empty result instead of presenting an unrelated historical case.
+
+The no-answer evaluation achieved:
+
+```text
+20 / 20 correct
+```
+
+for the evaluated threshold range.
+
+---
+
+# Retrieval Evaluation
+
+Bayan evaluates retrieval using labelled queries rather than approving results only because they appear semantically plausible.
+
+The evaluation includes:
+
+- Recall@10
+- MRR@10
+- Re-ranking comparison
+- Arabic retrieval
+- English retrieval
+- Cross-lingual gap
+- No-answer correctness
+- Retrieval latency
+
+Measured strict-ID results:
+
+| Metric | Result |
+|---|---:|
+| Recall@10 without reranking | 0.0077 |
+| MRR@10 without reranking | 0.0026 |
+| Recall@10 with reranking | 0.0308 |
+| MRR@10 with reranking | 0.0067 |
+| Arabic reranked MRR | 0.0033 |
+| English reranked MRR | 0.0097 |
+| Cross-lingual MRR gap | 0.0063 |
+
+The low strict-ID metrics were investigated rather than hidden.
+
+The 20,000-case retrieval corpus contains only:
+
+```text
+5,401 unique texts
+14,599 duplicate-text rows
+```
+
+The labelled relevance IDs are also concentrated in a relatively small portion of the corpus.
+
+Despite the poor strict-ID retrieval metrics, topic-level retrieval achieved:
+
+```text
+Topic Hit@10: 130 / 130
+```
+
+This indicates an important distinction between retrieving a semantically/topically correct duplicate and retrieving the exact row ID expected by the benchmark.
+
+The discrepancy is documented as an evaluation limitation rather than redefining the labels to improve reported performance.
+
+---
+
+# Retrieval Latency
+
+Measured retrieval-stage latency:
+
+```text
+Bi-encoder retrieval p50:
+15.45 ms / query
+
+Cross-encoder re-ranking p50:
+33.40 ms / query
+```
+
+These measurements provide separate visibility into first-stage retrieval and second-stage re-ranking costs.
+
+---
+
+# Evaluation Framework
+
+Bayan includes a dedicated evaluation framework designed to measure more than aggregate model accuracy.
+
+The framework combines:
+
+- Bootstrap confidence intervals
+- Slice-based evaluation
+- Behavioural testing
+- Manual error analysis
+- Error taxonomy
+- Model cards
+- Known limitations
+
+---
+
+## Bootstrap Confidence Intervals
+
+Bootstrap resampling is used to quantify uncertainty around evaluation metrics.
+
+The classifier validation evaluation produced:
+
+```text
+Accuracy: 0.8750
+95% Bootstrap CI: [0.8617, 0.8888]
+```
+
+The evaluation utilities also support paired bootstrap comparison when per-example predictions from both systems are available.
+
+When only aggregate metrics are available, Bayan does not fabricate paired observations.
+
+---
+
+# Slice-Based Evaluation
+
+Aggregate metrics can hide systematic failures.
+
+Bayan therefore evaluates performance across multiple slices.
+
+### Language
+
+| Slice | Examples | Accuracy |
+|---|---:|---:|
+| Arabic | 1,200 | 75.0% |
+| English | 1,200 | 100.0% |
+
+### Dialect
+
+| Slice | Examples | Accuracy |
+|---|---:|---:|
+| MSA | 1,200 | 75.0% |
+| No dialect label | 1,200 | 100.0% |
+
+### Input Length
+
+| Slice | Examples | Accuracy |
+|---|---:|---:|
+| Short | 754 | 84.35% |
+| Medium | 1,646 | 88.94% |
+
+The evaluation identified a substantial Arabic/English performance difference that would not be visible from aggregate accuracy alone.
+
+---
+
+# Error Analysis
+
+A manual review of **120 validation errors** was conducted.
+
+All 120 reviewed failures followed the same systematic pattern:
+
+```text
+True class:      parks
+Predicted class: roads
+Language:        Arabic
+```
+
+The errors included explicit park-related cues such as references to:
+
+- Parks
+- Children's playgrounds
+- Park irrigation
+- Park maintenance
+- Park walkways
+- Accessibility
+
+Because clean examples failed alongside noisier variants, the issue was classified as:
+
+```text
+Systematic class confusion
+```
+
+### Error Taxonomy
+
+| Error Category | Count | Share |
+|---|---:|---:|
+| Systematic `parks → roads` confusion | 120 | 100% |
+
+The analysis suggests prioritizing:
+
+1. Auditing the training data, labels, and split distribution for the `parks` class.
+2. Adding diverse Arabic park examples and hard negatives against the `roads` class.
+3. Adding regression and behavioural tests for park-specific cues and noisy Arabic variants.
+
+The exact improvement from these interventions must be measured experimentally rather than predicted as a guaranteed metric increase.
+
+---
+
+# Behavioural Evaluation
+
+Bayan includes behavioural tests to investigate whether model predictions remain stable under controlled changes.
+
+### Invariance Testing
+
+Inputs are modified in ways that should not change the predicted topic, such as irrelevant location or time substitutions.
+
+Measured result:
+
+```text
+140 / 200 passed
+70%
+```
+
+The failures revealed instability between some `digital_services` and `lighting` predictions under irrelevant substitutions.
+
+### Minimum Functionality Tests
+
+A manually defined bilingual MFT set was used to verify basic topic recognition.
+
+Measured result:
+
+```text
+16 / 16 passed
+100%
+```
+
+### Directional Testing
+
+The supplied directional tests depend on sentiment behaviour, while the trained Bayan artifact is a topic classifier.
+
+These tests are therefore marked **not applicable** rather than reporting an artificial score.
+
+---
+
+# Model Cards
+
+Bayan maintains model cards for three major components:
+
+```text
+docs/model_cards/topic_classifier.md
+docs/model_cards/ner.md
+docs/model_cards/retrieval.md
+```
+
+Each model card documents information such as:
+
+- Intended use
+- Model/checkpoint
+- Evaluation evidence
+- Known limitations
+- Important performance slices
+- Deployment considerations
+
+The purpose is to make model limitations visible alongside model performance.
+
+---
+
+# Inference Optimization
+
+Bayan extends beyond model training into production-oriented inference optimization.
+
+The optimization ladder evaluates:
+
+```text
+PyTorch FP32
+      │
+      ▼
+Dynamic Padding
+      │
+      ▼
+Reduced Maximum Sequence Length
+      │
+      ▼
+ONNX FP32
+      │
+      ▼
+INT8 Quantization
+```
+
+Optimization decisions are based on both **latency and model quality**.
+
+The evaluation considers:
+
+- p50 inference latency
+- p99 inference latency
+- CPU thread configuration
+- Speed-up relative to FP32
+- Macro-F1
+- Accuracy/quality tax
+- Confidence intervals where applicable
+
+The objective is to reduce inference cost without accepting an unjustified degradation in NLP quality.
+
+---
+
+# FastAPI Serving
+
+The final Bayan architecture exposes the NLP pipeline through **FastAPI**.
+
+The service is designed to integrate the same preprocessing contract used during development with the selected production model artifacts.
+
+The integrated architecture supports endpoints such as:
+
+```text
+POST /v1/classify
+POST /v1/entities
+POST /v1/search
+POST /v1/analyse
+```
+
+These endpoints represent the main Bayan capabilities:
+
+- Classifying citizen feedback
+- Extracting entities
+- Retrieving related historical cases
+- Combining multiple NLP operations into a unified analysis
+
+---
+
+# Startup Canaries
+
+Model-serving failures can occur even when the API itself starts successfully.
+
+Bayan therefore includes **startup canaries** designed to detect problems such as:
+
+- Incompatible model artifacts
+- Incorrect preprocessing versions
+- Train/serve skew
+- Unexpected model outputs
+- Missing serving dependencies
+
+The service verifies critical assumptions before accepting production traffic.
+
+---
+
+# Performance and Load Testing
+
+Bayan distinguishes between **bare model latency** and **end-to-end HTTP latency**.
+
+Model benchmarks use a representative production input-length mix from:
+
+```text
+data/serving/bench_mix.npy
+```
+
+The benchmark records:
+
+- Warm-up behaviour
+- p50 latency
+- p99 latency
+- CPU thread count
+- Sequence-length configuration
+
+The API is additionally designed to be load-tested using concurrent HTTP clients, allowing the complete serving path to be measured rather than relying only on isolated model inference.
+
+---
+
+# Repository Structure
+
+```text
+bayan/
 │
-├── src/bayan/
-│   ├── preprocessing/
-│   │   ├── core.py             # Lab 1
-│   │   ├── segmentation.py     # Lab 1
-│   │   └── arabic.py           # Lab 4
-│   ├── attention.py            # Lab 2
-│   ├── models/
-│   │   ├── data.py             # Lab 3A
-│   │   ├── ner.py              # Lab 3B
-│   │   └── qa.py               # Lab 3B
-│   ├── search/
-│   │   ├── index.py            # Lab 5
-│   │   └── service.py          # Lab 5
-│   ├── evaluation/
-│   │   ├── bootstrap.py        # Lab 6
-│   │   ├── slices.py           # Lab 6
-│   │   └── behavioural.py      # Lab 6
-│   └── serving/
-│       ├── api.py              # Lab 7 + Capstone
-│       └── canaries.py         # Lab 7 + Capstone
+├── src/
+│   └── bayan/
+│       │
+│       ├── preprocessing/
+│       │   ├── core.py
+│       │   ├── segmentation.py
+│       │   └── arabic.py
+│       │
+│       ├── attention.py
+│       │
+│       ├── models/
+│       │   ├── data.py
+│       │   ├── ner.py
+│       │   └── qa.py
+│       │
+│       ├── search/
+│       │   ├── index.py
+│       │   └── service.py
+│       │
+│       ├── evaluation/
+│       │   ├── bootstrap.py
+│       │   ├── slices.py
+│       │   └── behavioural.py
+│       │
+│       └── serving/
+│           ├── api.py
+│           └── canaries.py
 │
 ├── notebooks/
 │   ├── 00_colab_setup.ipynb
-│   ├── 01_tokenizer_audit.py   # Lab 1
-│   ├── 02_transformer_anatomy.py # Lab 2
-│   └── 05_retrieval_eval.py    # Lab 5
+│   ├── 01_tokenizer_audit.py
+│   ├── 02_transformer_anatomy.py
+│   └── 05_retrieval_eval.py
 │
 ├── scripts/
 │   ├── doctor.py
-│   ├── parameter_audit.py      # Lab 2
-│   ├── tfidf_baseline.py       # Lab 3A
-│   ├── train_classifier.py     # Lab 3A
-│   ├── train_ner.py            # Lab 3B
-│   ├── qa_smoke.py             # Lab 3B
-│   ├── dialect_audit.py        # Lab 4
-│   ├── arabic_bakeoff.py       # Lab 4
-│   ├── evaluation_report.py    # Lab 6
-│   ├── benchmark_inference.py  # Lab 7
-│   ├── export_onnx.py          # Lab 7
-│   └── load_test.sh            # Lab 7
+│   ├── parameter_audit.py
+│   ├── tfidf_baseline.py
+│   ├── train_classifier.py
+│   ├── train_ner.py
+│   ├── qa_smoke.py
+│   ├── dialect_audit.py
+│   ├── arabic_bakeoff.py
+│   ├── evaluation_report.py
+│   ├── benchmark_inference.py
+│   ├── export_onnx.py
+│   └── load_test.sh
 │
 ├── tests/
 ├── data/
 ├── artifacts/
 ├── templates/
 │   └── model_card.md.j2
+│
+├── docs/
+│   ├── model_cards/
+│   └── ERROR_TAXONOMY.md
 │
 ├── NOTES.md
 ├── BENCHMARKS.md
@@ -124,1889 +917,213 @@ SDA-AIE-211-Bayan/
 
 ---
 
-# ⚙️ First-Time Setup — Do This Once
+# Technologies
 
-The course targets **Python 3.12**.
+Bayan brings together tools from several areas of modern NLP and machine learning engineering.
 
-## macOS / Linux
+### Machine Learning & NLP
 
-```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
+- Python
+- PyTorch
+- Hugging Face Transformers
+- Sentence Transformers
+- scikit-learn
+- spaCy
+- CAMeL Tools
+- seqeval
 
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip install -e .
+### Information Retrieval
 
-python scripts/doctor.py
-```
+- FAISS
+- Multilingual sentence embeddings
+- Bi-encoder retrieval
+- Cross-encoder re-ranking
 
-## Windows PowerShell
+### Model Optimization
 
-```powershell
-py -3.12 -m venv .venv
-.venv\Scripts\Activate.ps1
+- ONNX
+- ONNX Runtime
+- INT8 quantization
 
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip install -e .
+### Serving & Testing
 
-python scripts/doctor.py
-```
+- FastAPI
+- Uvicorn
+- pytest
+- HTTP load testing
 
-Expected final environment message:
+### Data & Evaluation
 
-```text
-ALL GOOD
-```
-
-## Every time you reopen the project
-
-macOS / Linux:
-
-```bash
-source .venv/bin/activate
-```
-
-Windows:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
+- NumPy
+- pandas
+- Bootstrap confidence intervals
+- Slice-based evaluation
+- Behavioural testing
+- Manual error analysis
 
 ---
 
-# 🧪 How to Work Through Every Lab
+# Engineering Principles
 
-This is a **starter repository**, so some files intentionally contain:
+Bayan follows several principles throughout the project.
 
-```python
-# TODO(Lab X)
-raise NotImplementedError(...)
-```
+### Evidence Before Decisions
 
-That means the repository is waiting for **your implementation**.
+Model, tokenizer, retrieval, and optimization decisions are based on measured results rather than assumptions.
 
-Use the same pattern in every lab:
+### Bilingual Evaluation
 
-```text
-1. Read the lab section below
-2. Open the exact file(s) listed under EDIT
-3. Run the test/script under RUN BEFORE
-4. Observe the failure/baseline
-5. Implement the TODOs
-6. Run again
-7. Record YOUR measured evidence
-8. Commit + push
-```
+Arabic and English are evaluated separately where appropriate instead of relying exclusively on aggregate metrics.
 
-> Do not edit expected test values just to make tests pass. The tests are part of the contract.
+### Honest Failure Reporting
 
----
+Targets that are not achieved are documented rather than hidden or artificially satisfied.
 
-# 🥇 LAB 1 — Bilingual Preprocessing and Tokenisation Pipeline
+### Privacy-Aware Processing
 
-**Duration:** ~50 minutes  
-**Goal:** Build Bayan's shared preprocessing module, verify PII masking, segment sentences, compare four tokenizers, then make a tokenizer decision from measured evidence.
+Sensitive information is masked before downstream NLP processing.
 
-## Lab 1 — What you will edit
+### No Forced Answers
 
-```text
-NOTES.md
-src/bayan/preprocessing/core.py
-src/bayan/preprocessing/segmentation.py
-notebooks/01_tokenizer_audit.py
-BENCHMARKS.md
-DECISIONS.md
-```
+Both QA and retrieval include explicit mechanisms for returning no answer or no result when the available evidence is insufficient.
 
-## Lab 1 — Step 1: Defect Safari
+### Reproducibility
 
-### OPEN
-
-```text
-data/raw/bayan_raw_sample.csv
-```
-
-Inspect the sample before writing cleaning rules.
-
-Find and document at least **6 defect classes** in:
-
-```text
-NOTES.md
-```
-
-Look for:
-
-```text
-Unicode forms
-Tatweel / ـ
-Code-switching Arabic ↔ English
-PII
-Emoji
-HTML remnants
-```
-
-### RUN
-
-No model is required here. You are inspecting the supplied sample and writing observations.
+Important model choices, benchmark results, evaluation findings, and limitations are recorded in the repository.
 
 ---
 
-## Lab 1 — Step 2: Implement preprocessing
+# Project Evidence
 
-### EDIT
+The repository maintains several documents that capture the engineering evidence behind Bayan.
 
-```text
-src/bayan/preprocessing/core.py
-```
+### `BENCHMARKS.md`
 
-Complete:
+Contains measured results including:
 
-```python
-normalize(text)
-mask_pii(text)
-preprocess(text)
-```
+- Tokenizer fertility
+- Sequence-length statistics
+- Classification metrics
+- NER metrics
+- Arabic model comparisons
+- Retrieval Recall@10 and MRR@10
+- Behavioural-test results
+- Inference latency
+- Optimization quality tax
 
-The implementation must follow the course preprocessing contract. Among the behaviours tested are Unicode normalisation, tatweel removal, repeated-character handling, whitespace cleanup, phone masking, national-ID-shaped masking, and preserving useful signal such as emoji.
+### `DECISIONS.md`
 
-### RUN BEFORE IMPLEMENTATION
+Documents evidence-based decisions such as:
 
-```bash
-pytest tests/test_preprocessing.py -q
-```
+- Tokenizer selection
+- Multilingual checkpoint selection
+- Arabic-model decisions
+- Serving-artifact decisions
+- Accepted engineering trade-offs
 
-The starter is expected to fail because the functions still contain TODOs.
+### `EVALUATION_REPORT.md`
 
-### RUN AFTER IMPLEMENTATION
+Provides the broader model-quality analysis:
 
-```bash
-pytest tests/test_preprocessing.py -q
-```
+- Aggregate performance
+- Confidence intervals
+- Language and dialect slices
+- Class-level performance
+- Behavioural tests
+- Error taxonomy
+- Known limitations
+- Prioritized improvements
 
-### TARGET
+### `docs/model_cards/`
 
-```text
-25 passed
-```
-
----
-
-## Lab 1 — Step 3: Verify PII recall
-
-The dedicated PII fixture contains **60 cases**.
-
-### RUN
-
-```bash
-pytest tests/test_pii_recall.py -q
-```
-
-### TARGET
-
-```text
-60/60 PII cases handled correctly
-PII recall = 100%
-```
-
-> The pytest output may show one aggregate test passing; that test internally checks all 60 rows.
+Contains individual documentation for the major trained components.
 
 ---
 
-## Lab 1 — Step 4: Sentence segmentation
+# Known Limitations
 
-### EDIT
+Bayan is an engineering and educational NLP project, and its results should be interpreted in the context of the supplied datasets and evaluation environment.
 
-```text
-src/bayan/preprocessing/segmentation.py
-```
+Important limitations identified during development include:
 
-Complete:
+- The topic-classification dataset contains strong lexical and template-like patterns, allowing both the traditional baseline and Transformer classifier to reach very high test performance.
+- Validation evaluation revealed a systematic Arabic `parks → roads` classification failure.
+- Arabic and English performance can differ substantially even when aggregate accuracy appears strong.
+- Behavioural invariance testing exposed prediction instability under transformations that should ideally be irrelevant.
+- The semantic-search corpus contains substantial duplicate text, making strict row-ID retrieval metrics significantly different from semantic/topic-level retrieval quality.
+- Some desired paired statistical comparisons cannot be reconstructed when only aggregate historical results are available.
+- Performance measurements depend on the execution environment and should not be generalized to different production hardware without re-benchmarking.
 
-```python
-build_pipeline()
-split_sentences(raw, nlp)
-```
-
-Build the spaCy segmentation pipeline and spot-check **5 flagged long examples**, including the numbered-list complaint.
-
-Your segmentation should produce sensible sentence boundaries and should not blindly break useful abbreviations.
-
-### VERIFY
-
-Use the functions interactively or from your editor/terminal to inspect the 5 examples. Record noteworthy findings in:
-
-```text
-NOTES.md
-```
+These limitations are retained as part of the project evidence rather than removed from the reported results.
 
 ---
 
-## Lab 1 — Step 5: Tokenizer audit
+# Future Improvements
 
-### EDIT
+Several directions could further improve Bayan:
 
-```text
-notebooks/01_tokenizer_audit.py
-```
-
-Complete:
-
-```python
-fertility(tokenizer, texts)
-main()
-```
-
-The audit compares these four candidates:
-
-```text
-bert-base-multilingual-cased
-xlm-roberta-base
-CAMeL-Lab/bert-base-arabic-camelbert-mix
-distilbert-base-uncased
-```
-
-Measure:
-
-```text
-AR fertility
-EN fertility
-sequence lengths
-p95 sequence length per language/tokenizer
-```
-
-### RUN
-
-```bash
-python notebooks/01_tokenizer_audit.py
-```
-
-The first run may download tokenizer files, so allow extra time.
-
-### RECORD
-
-Put **your measured numbers** in:
-
-```text
-BENCHMARKS.md
-```
+- Expand the Arabic training corpus with more diverse real-world language.
+- Increase representation of Gulf dialect varieties.
+- Improve the `parks` class using targeted Arabic examples and hard negatives.
+- Expand behavioural test coverage.
+- Evaluate additional Arabic-focused Transformer models.
+- Improve semantic-search relevance labels to account for duplicate or equivalent cases.
+- Introduce more robust multilingual retrieval evaluation.
+- Expand serving observability and monitoring.
+- Evaluate inference performance across different CPU architectures.
+- Extend the integrated API with additional analysis capabilities.
 
 ---
 
-## Lab 1 — Step 6: Make the tokenizer decision
+# Project Goal
 
-### EDIT
+Bayan demonstrates how a bilingual NLP system can be developed beyond simply fine-tuning a Transformer model.
 
-```text
-DECISIONS.md
-```
-
-Complete the tokenizer decision using measured evidence:
+It brings together the complete engineering lifecycle:
 
 ```text
-Chosen checkpoint(s)
-Arabic fertility
-English fertility
-p95 length
-Why this choice fits Bayan
+Data
+ ↓
+Preprocessing
+ ↓
+Privacy Protection
+ ↓
+Tokenization
+ ↓
+Transformer Models
+ ↓
+Arabic-Aware NLP
+ ↓
+Classification / NER / QA
+ ↓
+Semantic Retrieval
+ ↓
+Evaluation
+ ↓
+Error Analysis
+ ↓
+Model Documentation
+ ↓
+Inference Optimization
+ ↓
+API Serving
 ```
 
-Do not choose based on model popularity alone.
-
----
-
-## Lab 1 — Final check
-
-macOS/Linux with Make:
-
-```bash
-make lab1
-```
-
-Cross-platform equivalent:
-
-```bash
-pytest tests/test_preprocessing.py tests/test_pii_recall.py -q
-```
-
-Then run the tokenizer audit one final time:
-
-```bash
-python notebooks/01_tokenizer_audit.py
-```
-
-## Lab 1 — Commit
-
-```bash
-git status
-git add .
-git commit -m "feat(preprocessing): versioned bilingual pipeline with tokenizer audit"
-git push
-```
-
-✅ **Lab 1 is complete when:** preprocessing tests pass, PII recall is 100%, segmentation is spot-checked, tokenizer metrics are recorded, and `DECISIONS.md` contains the tokenizer choice.
+The result is a unified **Arabic–English NLP engineering project** designed around measurable performance, transparent limitations, reproducibility, and production-oriented deployment.
 
 ---
 
-# 🧠 LAB 2 — Anatomy of a Transformer
+# Author
 
-**Duration:** ~50 minutes  
-**Goal:** Implement scaled dot-product attention and Multi-Head Attention, compare against PyTorch, audit parameter counts, build a causal mask, and diagnose attention-mask leakage.
+**Jory Alshaalan**
 
-## Lab 2 — What you will edit
+Developed as part of:
 
-```text
-src/bayan/attention.py
-notebooks/02_transformer_anatomy.py
-scripts/parameter_audit.py
-NOTES.md
-BENCHMARKS.md
-```
+**SDA-AIE-211 — Natural Language Processing with Transformers**
 
-## Lab 2 — Step 1: Attention from scratch
+**SDAIA Academy**  
+**Saudi Data & AI Authority (SDAIA)**
 
-### EDIT
-
-```text
-src/bayan/attention.py
-```
-
-Complete:
-
-```python
-attention(q, k, v, mask=None)
-MultiHeadAttention
-```
-
-Your attention flow should conceptually follow:
-
-```text
-Q × Kᵀ
-  ↓
-scale by √d_k
-  ↓
-apply mask to scores
-  ↓
-softmax
-  ↓
-weights × V
-```
-
-### RUN BEFORE / DURING IMPLEMENTATION
-
-```bash
-pytest tests/test_attention.py -q
-```
-
-### TARGET
-
-Your implementation should match the PyTorch reference to:
-
-```text
-atol = 1e-6
-```
-
----
-
-## Lab 2 — Step 2: Wire the transformer anatomy script
-
-### EDIT
-
-```text
-notebooks/02_transformer_anatomy.py
-```
-
-Use your attention implementation to:
-
-```text
-verify numerical equivalence
-print/inspect the attention weight matrix
-exercise Multi-Head Attention
-verify masking behaviour
-produce evidence needed by the lab
-```
-
-### RUN
-
-```bash
-python notebooks/02_transformer_anatomy.py
-```
-
-The starter will raise `NotImplementedError` until you complete its TODO.
-
----
-
-## Lab 2 — Step 3: Parameter audit
-
-### EDIT
-
-```text
-scripts/parameter_audit.py
-```
-
-Complete:
-
-```python
-audit(checkpoint)
-```
-
-Audit:
-
-```text
-bert-base-multilingual-cased
-CAMeL-Lab/bert-base-arabic-camelbert-mix
-```
-
-Compare parameter buckets such as embeddings, attention, FFN, norms, pooler, and other parameters.
-
-### RUN
-
-```bash
-python scripts/parameter_audit.py
-```
-
-### RECORD
-
-Write the comparison in:
-
-```text
-NOTES.md
-```
-
-Also answer in one sentence:
-
-```text
-Why is the embedding share different?
-```
-
-Hint: vocabulary size / multilingual tax.
-
----
-
-## Lab 2 — Step 4: Causal mask
-
-### EDIT
-
-Use:
-
-```text
-src/bayan/attention.py
-notebooks/02_transformer_anatomy.py
-```
-
-Modify the mask so token position `i` can attend only to positions `≤ i`.
-
-Verify the attention matrix is **lower triangular**.
-
-Record which model family this corresponds to:
-
-```text
-Decoder-style causal attention
-```
-
-### RUN
-
-```bash
-python notebooks/02_transformer_anatomy.py
-```
-
----
-
-## Lab 2 — Step 5: Attention-map diagnostics + pad leak
-
-In the anatomy script, inspect attention maps on the Bayan examples.
-
-Look for:
-
-```text
-an adjacency-looking head
-[SEP] sink behaviour
-attention paid to [PAD]
-```
-
-Compare pad mass with and without a correct attention mask.
-
-Record findings in:
-
-```text
-BENCHMARKS.md
-NOTES.md
-```
-
----
-
-## Lab 2 — Final check
-
-```bash
-pytest tests/test_attention.py -q
-python scripts/parameter_audit.py
-python notebooks/02_transformer_anatomy.py
-```
-
-Or:
-
-```bash
-make lab2
-```
-
-## Lab 2 — Commit
-
-```bash
-git status
-git add .
-git commit -m "feat(notebooks): attention implementation + parameter audit + pad-leak diagnosis"
-git push
-```
-
-✅ **Lab 2 is complete when:** attention equivalence passes, MHA works, parameter audit is recorded, causal masking is verified, and the pad-leak diagnosis is documented.
-
----
-
-# 🤖 LAB 3A — Topic Classification
-
-**Duration:** ~50 minutes  
-**Environment:** GPU pool or Google Colab fallback  
-**Goal:** Establish a TF-IDF baseline, build a leakage-safe grouped split, fine-tune a topic classifier, and beat the baseline by at least **+8 macro-F1 points**.
-
-## Before Lab 3 — Colab setup if GPU is needed
-
-Open:
-
-```text
-notebooks/00_colab_setup.ipynb
-```
-
-Use the **same GitHub repository**. Do not create a second codebase in Colab.
-
-Large training artefacts can be written to Google Drive via `--output-dir`.
-
----
-
-## Lab 3A — What you will edit
-
-```text
-src/bayan/models/data.py
-scripts/tfidf_baseline.py
-scripts/train_classifier.py
-BENCHMARKS.md
-```
-
-## Lab 3A — Step 1: TF-IDF + LinearSVC baseline
-
-### EDIT
-
-```text
-scripts/tfidf_baseline.py
-```
-
-Complete the supplied baseline driver.
-
-### RUN
-
-```bash
-python scripts/tfidf_baseline.py
-```
-
-### RECORD
-
-Write baseline macro-F1 in:
-
-```text
-BENCHMARKS.md
-```
-
-Reference output is around `0.71`; your report should contain **your run**, not copied reference numbers.
-
----
-
-## Lab 3A — Step 2: Build grouped splits
-
-### EDIT
-
-```text
-src/bayan/models/data.py
-```
-
-Complete:
-
-```python
-build_topic_dataset(...)
-```
-
-Build train/validation/test splits using the supplied grouping field so the same citizen does not leak across splits.
-
-### RUN CONTRACT TEST
-
-```bash
-pytest tests/test_model_data.py -q
-```
-
-### TARGET
-
-```text
-0 citizen overlap across splits
-```
-
-The grouped split is a critical graded engineering requirement.
-
----
-
-## Lab 3A — Step 3: Fine-tune topic classifier
-
-### EDIT
-
-```text
-scripts/train_classifier.py
-```
-
-Complete the training TODO so it:
-
-```text
-loads the grouped dataset
-uses the Lab-1 tokenizer/checkpoint decision
-fine-tunes the classifier
-evaluates it
-saves a re-runnable artefact
-```
-
-### RUN LOCALLY / GPU MACHINE
-
-```bash
-python scripts/train_classifier.py
-```
-
-Default output:
-
-```text
-artifacts/topic_classifier
-```
-
-### RUN WITH A CUSTOM / GOOGLE DRIVE OUTPUT PATH
-
-```bash
-python scripts/train_classifier.py --output-dir /content/drive/MyDrive/SDA-AIE-211/artifacts/topic_classifier
-```
-
-### RECORD
-
-Put frozen-test metrics and improvement over baseline in:
-
-```text
-BENCHMARKS.md
-```
-
-### TARGET
-
-```text
-Transformer macro-F1 ≥ baseline + 0.08
-```
-
----
-
-## Lab 3A — Final check
-
-```bash
-pytest tests/test_model_data.py -q
-python scripts/tfidf_baseline.py
-python scripts/train_classifier.py
-```
-
-✅ **Lab 3A is complete when:** grouped split is leakage-free, baseline is recorded, trained classifier artefact exists, and the frozen-test delta is recorded.
-
----
-
-# 🏷️ LAB 3B — NER + Extractive QA
-
-**Duration:** ~50 minutes  
-**Goal:** Align BIO labels to subwords correctly, fine-tune NER, and implement extractive QA post-processing including honest no-answer handling.
-
-## Lab 3B — What you will edit
-
-```text
-src/bayan/models/ner.py
-src/bayan/models/qa.py
-scripts/train_ner.py
-scripts/qa_smoke.py
-BENCHMARKS.md
-```
-
-## Lab 3B — Step 1: NER label alignment
-
-### EDIT
-
-```text
-src/bayan/models/ner.py
-```
-
-Complete:
-
-```python
-align_labels(word_ids, word_labels)
-```
-
-The alignment must correctly map word-level BIO labels to tokenizer subwords and mask non-first pieces as required by the course contract.
-
-### RUN
-
-```bash
-pytest tests/test_ner_alignment.py -q
-```
-
-### TARGET
-
-```text
-8/8 alignment cases pass
-```
-
-This includes an Arabic clitic-related case that breaks naive implementations.
-
----
-
-## Lab 3B — Step 2: Fine-tune NER
-
-### EDIT
-
-```text
-scripts/train_ner.py
-```
-
-Complete the TODO so it:
-
-```text
-reads the supplied CoNLL data
-uses align_labels()
-fine-tunes AutoModelForTokenClassification
-evaluates with seqeval at entity level
-saves the NER artefact
-```
-
-### RUN
-
-```bash
-python scripts/train_ner.py
-```
-
-Default output:
-
-```text
-artifacts/ner
-```
-
-Or with Drive:
-
-```bash
-python scripts/train_ner.py --output-dir /content/drive/MyDrive/SDA-AIE-211/artifacts/ner
-```
-
-### TARGET
-
-```text
-NER entity-level F1 ≥ 0.80
-```
-
-Record the result in `BENCHMARKS.md`.
-
----
-
-## Lab 3B — Step 3: Extractive QA span selection
-
-### EDIT
-
-```text
-src/bayan/models/qa.py
-```
-
-Complete:
-
-```python
-best_span(...)
-```
-
-The function must reject invalid spans and support an honest null/no-answer path.
-
-### RUN CONTRACT TEST
-
-```bash
-pytest tests/test_qa.py -q
-```
-
----
-
-## Lab 3B — Step 4: QA smoke set
-
-### EDIT
-
-```text
-scripts/qa_smoke.py
-```
-
-Complete the driver to run the supplied **12-question smoke set**.
-
-### RUN
-
-```bash
-python scripts/qa_smoke.py
-```
-
-### TARGET
-
-```text
-9/9 answerable questions → correct span
-3/3 unanswerable questions → answer=None
-```
-
----
-
-## Lab 3B — Final check
-
-```bash
-pytest tests/test_ner_alignment.py tests/test_qa.py -q
-python scripts/train_ner.py
-python scripts/qa_smoke.py
-```
-
-Or contract tests together:
-
-```bash
-make lab3
-```
-
-## Lab 3B — Commit
-
-```bash
-git status
-git add .
-git commit -m "feat(models): NER + extractive QA with honest null handling"
-git push
-```
-
-✅ **Lab 3 is complete when:** classifier beats baseline, NER alignment is correct, NER meets the target, and QA handles both answerable and unanswerable cases.
-
----
-
-# 🇸🇦 LAB 4 — Arabic Pipeline and Dialect-Aware Fine-tuning
-
-**Duration:** ~50 minutes  
-**Environment:** Lab 3 environment + CAMeL Tools  
-**Goal:** Add model-specific Arabic normalisation, audit dialect distribution, integrate clitic segmentation into NER, and compare Arabic-centric checkpoints on the Gulf slice.
-
-## Lab 4 — What you will edit
-
-```text
-src/bayan/preprocessing/arabic.py
-scripts/dialect_audit.py
-scripts/arabic_bakeoff.py
-NOTES.md
-BENCHMARKS.md
-DECISIONS.md
-```
-
-## Lab 4 — Setup
-
-If CAMeL data is not installed:
-
-```bash
-camel_data -i defaults
-```
-
----
-
-## Lab 4 — Step 1: Arabic normalisation profiles
-
-### EDIT
-
-```text
-src/bayan/preprocessing/arabic.py
-```
-
-Complete:
-
-```python
-normalize_arabic(text, profile)
-```
-
-Implement the two course profiles and preserve display text separately from model-normalised text when appropriate.
-
-### RUN
-
-```bash
-pytest tests/test_arabic_normalize.py -q
-```
-
-### TARGET
-
-```text
-30 passed
-```
-
----
-
-## Lab 4 — Step 2: Dialect audit
-
-### EDIT
-
-```text
-scripts/dialect_audit.py
-```
-
-Complete the dialect audit over the Arabic slice.
-
-### RUN
-
-```bash
-python scripts/dialect_audit.py
-```
-
-### RECORD
-
-In:
-
-```text
-NOTES.md
-```
-
-record:
-
-```text
-region/dialect distribution
-one-sentence implication of evaluating only on MSA
-```
-
----
-
-## Lab 4 — Step 3: Clitic segmentation for NER
-
-### EDIT
-
-```text
-src/bayan/preprocessing/arabic.py
-```
-
-Complete:
-
-```python
-segment(text)
-```
-
-Then wire the segmentation choice consistently into the NER data/training path.
-
-Re-evaluate the Day-2 NER model with the segmentation path and record the **LOCATION recall delta**.
-
-### RECORD
-
-```text
-BENCHMARKS.md
-```
-
-Target improvement is at least about **+4 recall points** for LOCATION.
-
----
-
-## Lab 4 — Step 4: Arabic model bake-off
-
-### EDIT
-
-```text
-scripts/arabic_bakeoff.py
-```
-
-Compare:
-
-```text
-CAMeLBERT-mix
-CAMeLBERT-DA
-MARBERT (optional if time allows)
-```
-
-Evaluate at least:
-
-```text
-all
-Gulf slice
-MSA slice
-```
-
-### RUN
-
-```bash
-python scripts/arabic_bakeoff.py
-```
-
-### RECORD
-
-```text
-BENCHMARKS.md
-DECISIONS.md#arabic-model
-```
-
-Choose the winner using **slice evidence**, not only aggregate F1.
-
-### TARGET
-
-```text
-dialect-aware model ≥ +4 macro-F1 on Gulf slice vs Day-2 model
-```
-
----
-
-## Lab 4 — Final check
-
-```bash
-pytest tests/test_arabic_normalize.py -q
-python scripts/dialect_audit.py
-python scripts/arabic_bakeoff.py
-```
-
-Or:
-
-```bash
-make lab4
-```
-
-## Lab 4 — Commit
-
-```bash
-git status
-git add .
-git commit -m "feat(arabic): normalisation profiles + dialect audit + DA model beats mix on Gulf slice"
-git push
-```
-
-✅ **Lab 4 is complete when:** 30 golden pairs pass, dialect mix is documented, segmentation impact is measured, and `DECISIONS.md` contains an Arabic-model choice backed by Gulf-slice evidence.
-
----
-
-# 🔎 LAB 5 — Bilingual Semantic Search
-
-**Duration:** ~50 minutes  
-**Goal:** Build a versioned FAISS index over 20k historical cases, retrieve with a bi-encoder, re-rank with a cross-encoder, evaluate retrieval metrics, and tune honest no-result behaviour.
-
-## Lab 5 — What you will edit
-
-```text
-src/bayan/search/index.py
-src/bayan/search/service.py
-notebooks/05_retrieval_eval.py
-BENCHMARKS.md
-```
-
-## Lab 5 — Data
-
-```text
-data/search/bayan_cases.csv
-data/search/bayan_queries.jsonl
-data/search/bm25_baseline_results.jsonl
-```
-
----
-
-## Lab 5 — Step 1: Build the FAISS index
-
-### EDIT
-
-```text
-src/bayan/search/index.py
-```
-
-Complete:
-
-```python
-build_index(...)
-```
-
-It must:
-
-```text
-encode the case corpus
-L2-normalise vectors
-build the FAISS index
-persist index + metadata
-persist a manifest
-pin model/preprocessing versions in the manifest
-```
-
-### RUN CONTRACT TEST WHILE IMPLEMENTING
-
-```bash
-pytest tests/test_search_contract.py -q
-```
-
-The contract validates the expected search/index interface and manifest discipline.
-
----
-
-## Lab 5 — Step 2: Two-stage search service
-
-### EDIT
-
-```text
-src/bayan/search/service.py
-```
-
-Complete:
-
-```python
-CaseSearch.__init__(...)
-CaseSearch.search(...)
-```
-
-The search path should:
-
-```text
-load/check the manifest
-normalise the query consistently
-run bi-encoder retrieval
-retrieve candidates
-cross-encoder re-rank candidates
-apply min_score for honest empty results
-```
-
----
-
-## Lab 5 — Step 3: Retrieval evaluation
-
-### EDIT
-
-```text
-notebooks/05_retrieval_eval.py
-```
-
-Complete the evaluation driver.
-
-It must report:
-
-```text
-recall@10 without reranking
-MRR@10 without reranking
-recall@10 with reranking
-MRR@10 with reranking
-cross-lingual slice gap
-no-answer threshold behaviour
-```
-
-### RUN
-
-```bash
-python notebooks/05_retrieval_eval.py
-```
-
-### TARGETS
-
-```text
-recall@10 ≥ 0.80
-MRR@10 ≥ 0.70
-no-answer correctness ≥ 17/20
-```
-
-Record your measured values and stage latency in:
-
-```text
-BENCHMARKS.md
-```
-
----
-
-## Lab 5 — Step 4: Planted unnormalised-vector bug
-
-Verify why an index/query path without correct L2 normalisation can return plausible-looking results but collapse retrieval metrics.
-
-The learning objective is:
-
-```text
-Do not approve retrieval by eyeballing results.
-Use the labelled query set and metrics.
-```
-
-Document the diagnosis.
-
----
-
-## Lab 5 — Final check
-
-```bash
-pytest tests/test_search_contract.py -q
-python notebooks/05_retrieval_eval.py
-```
-
-Or:
-
-```bash
-make lab5
-```
-
-## Lab 5 — Commit
-
-Use your measured retrieval result in a meaningful commit message, for example:
-
-```bash
-git status
-git add .
-git commit -m "feat(search): two-stage bilingual case search with evaluated reranking"
-git push
-```
-
-✅ **Lab 5 is complete when:** the index manifest is valid, two-stage search works, retrieval is evaluated, cross-lingual behaviour is measured, and no-answer threshold evidence is recorded.
-
----
-
-# 📊 LAB 6 — The Evaluation Report
-
-**Duration:** ~50 minutes  
-**Goal:** Build the honest report card for Bayan models using confidence intervals, sliced metrics, behavioural tests, hand-read error taxonomy, and model cards.
-
-## Lab 6 — What you will edit
-
-```text
-src/bayan/evaluation/bootstrap.py
-src/bayan/evaluation/slices.py
-src/bayan/evaluation/behavioural.py
-scripts/evaluation_report.py
-docs/ERROR_TAXONOMY.md
-EVALUATION_REPORT.md
-BENCHMARKS.md
-templates/model_card.md.j2
-```
-
-## Lab 6 — Step 1: Bootstrap confidence intervals
-
-### EDIT
-
-```text
-src/bayan/evaluation/bootstrap.py
-```
-
-Complete:
-
-```python
-bootstrap_ci(...)
-paired_bootstrap_diff(...)
-```
-
-### RUN
-
-```bash
-pytest tests/test_evaluation.py -q
-```
-
-The tests validate the core evaluation utilities.
-
-Use the paired bootstrap to answer whether a small metric difference is likely signal or noise.
-
----
-
-## Lab 6 — Step 2: Sliced report
-
-### EDIT
-
-```text
-src/bayan/evaluation/slices.py
-```
-
-Complete:
-
-```python
-sliced_report(...)
-```
-
-Include useful slices such as:
-
-```text
-language
-dialect
-class
-length
-```
-
-Flag small slices rather than pretending their estimates are precise.
-
-### RECORD
-
-Write the two-sentence headline a manager should read in:
-
-```text
-EVALUATION_REPORT.md
-```
-
----
-
-## Lab 6 — Step 3: Behavioural tests
-
-### EDIT
-
-```text
-src/bayan/evaluation/behavioural.py
-```
-
-Complete:
-
-```python
-run_behavioural_suite(...)
-```
-
-Cover the supplied behavioural test skeletons, including invariance, directional behaviour, and minimum-functionality tests.
-
-### RECORD
-
-```text
-BENCHMARKS.md
-```
-
-Targets from the course benchmark include approximately:
-
-```text
-invariance ≥ 95%
-MFT ≥ 90%
-```
-
----
-
-## Lab 6 — Step 4: Hand-read 120 errors
-
-Use:
-
-```text
-data/eval/validation_predictions.csv
-docs/ERROR_TAXONOMY.md
-```
-
-This step is intentionally **manual**.
-
-Read **120 sampled validation errors** in pairs and tag each error.
-
-Extend the taxonomy if an error does not fit existing categories.
-
-Produce:
-
-```text
-error-category histogram
-top 3 prioritised fixes
-predicted metric delta for each fix
-```
-
-> Do not replace this step with an automatic script. The human reading is part of the lab.
-
----
-
-## Lab 6 — Step 5: Generate evaluation report + model cards
-
-### EDIT
-
-```text
-scripts/evaluation_report.py
-EVALUATION_REPORT.md
-templates/model_card.md.j2
-```
-
-Complete the report generator so it combines:
-
-```text
-bootstrap results
-slice results
-behavioural rates
-error taxonomy summary
-top fixes
-model-card evidence
-```
-
-### RUN
-
-```bash
-python scripts/evaluation_report.py
-```
-
-### TARGET
-
-```text
-3 model cards
-known limitations written by hand
-sliced evaluation included
-behavioural results included
-error taxonomy included
-```
-
----
-
-## Lab 6 — Final check
-
-```bash
-pytest tests/test_evaluation.py -q
-python scripts/evaluation_report.py
-```
-
-Or:
-
-```bash
-make lab6
-```
-
-## Lab 6 — Commit
-
-```bash
-git status
-git add .
-git commit -m "docs(eval): sliced report + taxonomy + model cards"
-git push
-```
-
-✅ **Lab 6 is complete when:** evaluation utility tests pass, slices and CIs are reported, behavioural rates are measured, 120 errors are manually tagged, and 3 model cards are committed.
-
----
-
-# ⚡ LAB 7 — Hit the Latency Budget
-
-**Duration:** ~50 minutes  
-**Important:** latency evidence is **CPU-based**. Do not use Colab GPU timings as the production latency evidence.  
-**Goal:** Measure first, optimise second; then export to ONNX, quantise where justified, measure accuracy tax, wire the winning classifier into FastAPI, and load-test the HTTP path.
-
-## Lab 7 — What you will edit
-
-```text
-scripts/benchmark_inference.py
-scripts/export_onnx.py
-src/bayan/serving/api.py
-src/bayan/serving/canaries.py
-scripts/load_test.sh
-BENCHMARKS.md
-```
-
-## Lab 7 — Setup
-
-Pin the CPU thread count used by the lab:
-
-macOS/Linux:
-
-```bash
-export OMP_NUM_THREADS=4
-```
-
-Ensure serving/ONNX dependencies are installed through `requirements.txt`.
-
----
-
-## Lab 7 — Step 1: Baseline benchmark FIRST
-
-### EDIT
-
-```text
-scripts/benchmark_inference.py
-```
-
-Complete:
-
-```python
-benchmark(...)
-```
-
-The benchmark should include:
-
-```text
-warm-up
-production length mix from data/serving/bench_mix.npy
-p50
-p99
-pinned thread count
-```
-
-Produce at least:
-
-```text
-fp32 baseline @ max_length=512 padded
-free-wins row using dynamic padding / max_length≈128
-```
-
-### RUN
-
-```bash
-python scripts/benchmark_inference.py
-```
-
-Record every optimisation rung in:
-
-```text
-BENCHMARKS.md
-```
-
-> Baseline must exist before ONNX/INT8. Otherwise you do not have a denominator for speed-up.
-
----
-
-## Lab 7 — Step 2: Export classifier to ONNX
-
-### EDIT
-
-```text
-scripts/export_onnx.py
-```
-
-Implement classifier ONNX export and preserve a rollback fp32 artefact.
-
-### RUN
-
-```bash
-python scripts/export_onnx.py
-```
-
-Then benchmark again:
-
-```bash
-python scripts/benchmark_inference.py
-```
-
-Run a paired quality check against fp32 and record the result.
-
----
-
-## Lab 7 — Step 3: Quantise classifier to INT8
-
-Continue in:
-
-```text
-scripts/export_onnx.py
-```
-
-Apply the qconfig appropriate for the lab CPU.
-
-Then:
-
-```bash
-python scripts/export_onnx.py
-python scripts/benchmark_inference.py
-```
-
-Record:
-
-```text
-p50
-p99
-speed-up
-macro-F1 / quality metric
-accuracy tax
-confidence interval for tax where applicable
-```
-
-### CLASSIFIER TARGETS
-
-```text
-bare p99 ≤ 25 ms
-speed-up ≥ 6×
-classifier quality tax ≤ 1 macro-F1 point
-```
-
----
-
-## Lab 7 — Step 4: Repeat for NER
-
-Use the same export/benchmark path for the NER model.
-
-Compare:
-
-```text
-fp32
-ONNX fp32
-INT8
-```
-
-Then make an evidence-based decision about whether NER should actually use INT8.
-
-Do not assume every model should be quantised just because the classifier benefits.
-
----
-
-## Lab 7 — Step 5: Wire the winner into FastAPI
-
-### EDIT
-
-```text
-src/bayan/serving/api.py
-```
-
-Implement Lab 7's classification endpoint:
-
-```python
-POST /v1/classify
-```
-
-The serving path should use the shared preprocessing contract and the selected optimised classifier artefact.
-
-### EDIT CANARIES
-
-```text
-src/bayan/serving/canaries.py
-```
-
-Complete startup canaries to catch train/serve skew and incompatible artefacts before serving traffic.
-
-### RUN CONTRACT TEST
-
-```bash
-pytest tests/test_serving_contract.py -q
-```
-
-### START API
-
-```bash
-make serve
-```
-
-Cross-platform alternative:
-
-```bash
-uvicorn bayan.serving.api:app --host 0.0.0.0 --port 8000
-```
-
-Check health:
-
-```text
-GET http://localhost:8000/health
-```
-
----
-
-## Lab 7 — Step 6: HTTP load test
-
-The course uses `hey` with:
-
-```text
-16 concurrent clients
-60 seconds
-```
-
-Review/update:
-
-```text
-scripts/load_test.sh
-data/serving/load_test_config.yaml
-```
-
-### RUN
-
-```bash
-bash scripts/load_test.sh
-```
-
-### HTTP TARGET
-
-```text
-HTTP p99 ≤ 40 ms at 16 concurrent clients
-0 request errors
-startup canaries green
-```
-
----
-
-## Lab 7 — Final check
-
-```bash
-pytest tests/test_serving_contract.py -q
-python scripts/benchmark_inference.py
-python scripts/export_onnx.py
-```
-
-Start service:
-
-```bash
-make serve
-```
-
-Then in another terminal:
-
-```bash
-bash scripts/load_test.sh
-```
-
-Or run the contract test via:
-
-```bash
-make lab7
-```
-
-## Lab 7 — Commit
-
-Use **your measured numbers** in the commit message if appropriate. Do not copy reference latency.
-
-Example pattern:
-
-```bash
-git status
-git add .
-git commit -m "perf(serving): onnx int8 classifier with measured latency and quality tax"
-git push
-```
-
-✅ **Lab 7 is complete when:** benchmark ladder is filled, ONNX/INT8 decisions are evidence-based, serving contract passes, classifier is wired to API, canaries are green, and HTTP p99 is measured under load.
-
----
-
-# 🏁 FINAL CAPSTONE — Assemble Bayan
-
-The capstone is **not a brand-new project**.
-
-It is the integration of what you built in Labs 1–7 plus at least one extension.
-
-## Components you already built
-
-```text
-Lab 1 → preprocessing + tokenizer decision
-Lab 2 → transformer understanding / diagnostics
-Lab 3 → classifier + NER + QA
-Lab 4 → Arabic-specific normalisation / dialect evidence
-Lab 5 → semantic search
-Lab 6 → evaluation + model cards
-Lab 7 → optimised serving + canaries
-```
-
-## Capstone files to finish
-
-```text
-src/bayan/serving/api.py
-src/bayan/serving/canaries.py
-EVALUATION_REPORT.md
-BENCHMARKS.md
-DECISIONS.md
-docs/CAPSTONE_CHECKLIST.md
-```
-
-Finish/integrate endpoints such as:
-
-```text
-POST /v1/classify
-POST /v1/entities
-POST /v1/search
-POST /v1/analyse
-```
-
-## Full test suite — ONLY at the end
-
-```bash
-pytest -q
-```
-
-> During early labs, do **not** use full `pytest -q` as your main lab command because future-lab starter tests may still be intentionally unfinished. Use the lab-specific commands above.
-
-## Start the complete service
-
-```bash
-make serve
-```
-
-Or:
-
-```bash
-uvicorn bayan.serving.api:app --host 0.0.0.0 --port 8000
-```
-
-## Final evidence
-
-Your repository should tell the engineering story through:
-
-```text
-NOTES.md
-BENCHMARKS.md
-DECISIONS.md
-EVALUATION_REPORT.md
-model cards
-meaningful Git commit history
-```
-
----
-
-# ✅ Quick Command Cheat Sheet
-
-| Lab | Main checks / runs |
-|---|---|
-| **Lab 1** | `pytest tests/test_preprocessing.py -q` · `pytest tests/test_pii_recall.py -q` · `python notebooks/01_tokenizer_audit.py` |
-| **Lab 2** | `pytest tests/test_attention.py -q` · `python scripts/parameter_audit.py` · `python notebooks/02_transformer_anatomy.py` |
-| **Lab 3A** | `pytest tests/test_model_data.py -q` · `python scripts/tfidf_baseline.py` · `python scripts/train_classifier.py` |
-| **Lab 3B** | `pytest tests/test_ner_alignment.py tests/test_qa.py -q` · `python scripts/train_ner.py` · `python scripts/qa_smoke.py` |
-| **Lab 4** | `pytest tests/test_arabic_normalize.py -q` · `python scripts/dialect_audit.py` · `python scripts/arabic_bakeoff.py` |
-| **Lab 5** | `pytest tests/test_search_contract.py -q` · `python notebooks/05_retrieval_eval.py` |
-| **Lab 6** | `pytest tests/test_evaluation.py -q` · `python scripts/evaluation_report.py` |
-| **Lab 7** | `pytest tests/test_serving_contract.py -q` · `python scripts/benchmark_inference.py` · `python scripts/export_onnx.py` · `make serve` · `bash scripts/load_test.sh` |
-| **Final** | `pytest -q` · `make serve` |
-
----
-
-# 🧭 What goes in each evidence file?
-
-## `NOTES.md`
-Observations and engineering findings:
-
-```text
-defect safari
-dialect distribution
-parameter audit explanation
-debugging findings
-error observations
-```
-
-## `BENCHMARKS.md`
-Numbers from **your actual runs**:
-
-```text
-tokenizer fertility / p95
-classifier baseline + transformer metrics
-NER metrics
-Arabic slice metrics
-retrieval recall@10 / MRR@10
-behavioural rates
-latency p50 / p99
-accuracy tax
-```
-
-## `DECISIONS.md`
-Decisions backed by evidence:
-
-```text
-which tokenizer/model and why
-which Arabic model and why
-which serving artefact and why
-what trade-off was accepted
-```
-
-## `EVALUATION_REPORT.md`
-The final honest quality story:
-
-```text
-aggregate metrics
-slice metrics + CIs
-behavioural tests
-error taxonomy
-limitations
-prioritised fixes
-```
-
----
-
-# 🔁 Git Checkpoint Pattern
-
-At the end of each lab:
-
-```bash
-git status
-git add .
-git commit -m "<meaningful lab checkpoint>"
-git push
-```
-
-Your Git history is part of the engineering evidence. Commit working milestones instead of one giant final upload.
-
----
-
-# 🌟 The Finish Line
-
-You are not finishing this course with seven notebooks.
-
-You are finishing with a **bilingual NLP engineering project** that demonstrates:
-
-```text
-Data → Preprocessing → Transformer Models → Arabic Handling
-→ Retrieval → Evaluation → Optimisation → Serving
-```
-
-Build it one checkpoint at a time. Measure everything that matters. Keep the evidence. 🚀
-
-
-
+### SDAIA Academy
 
 https://github.com/SDAIAAcademy
