@@ -7,12 +7,15 @@ import onnxruntime as ort
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import AutoTokenizer
+from bayan.serving.canaries import run_startup_canaries
 
 
 MODEL_DIR = Path("artifacts/topic_classifier")
 ONNX_MODEL = Path("artifacts/onnx_classifier/classifier_int8.onnx")
 
 app = FastAPI(title="Bayan — Bilingual Citizen-Feedback Intelligence Service")
+
+run_startup_canaries()
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
 
