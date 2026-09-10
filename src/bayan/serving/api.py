@@ -1,37 +1,71 @@
-"""Lab 7 + capstone starter: Bayan FastAPI service.
+"""Lab 7: Bayan FastAPI inference service."""
 
-The final service should integrate the outputs of Labs 1-7. Keep this file as
-orchestration; reusable logic belongs in the package modules.
-"""
-from fastapi import FastAPI
+from pathlib import Path
+
+import numpy as np
+import onnxruntime as ort
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from transformers import AutoTokenizer
+
+
+MODEL_DIR = Path("artifacts/topic_classifier")
+ONNX_MODEL = Path("artifacts/onnx_classifier/classifier_int8.onnx")
 
 app = FastAPI(title="Bayan — Bilingual Citizen-Feedback Intelligence Service")
+
+tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
+
+session = ort.InferenceSession(
+    str(ONNX_MODEL),
+    providers=["CPUExecutionProvider"],
+)
+
+id2label = {
+    int(k): v
+    for k, v in tokenizer.init_kwargs.get("id2label", {}).items()
+} if tokenizer.init_kwargs.get("id2label") else None
+
+
+class ClassifyRequest(BaseModel):
+    text: str
 
 
 @app.get("/health")
 def health():
-    return {"status": "starter", "message": "Complete Labs 1-7 and wire startup canaries."}
+    return {
+        "status": "ok",
+        "model": "ONNX INT8",
+    }
 
 
 @app.post("/v1/classify")
-def classify(payload: dict):
-    # TODO(Lab 7): shared preprocess -> winning classifier artefact -> response.
-    raise NotImplementedError("Wire the Lab 7 classifier artefact")
+def classify(payload: ClassifyRequest):
+    text = payload.text.strip()
 
+    if not text:
+        raise HTTPException(status_code=400, detail="Text cannot be empty.")
 
-@app.post("/v1/entities")
-def entities(payload: dict):
-    # TODO(Capstone): shared preprocessing/Arabic segmentation -> NER -> case fields.
-    raise NotImplementedError("Wire the NER artefact")
+    inputs = tokenizer(
+        text,
+        return_tensors="np",
+        truncation=True,
+        max_length=128,
+    )
 
+    logits = session.run(
+        None,
+        {
+            "input_ids": inputs["input_ids"].astype(np.int64),
+            "attention_mask": inputs["attention_mask"].astype(np.int64),
+        },
+    )[0]
 
-@app.post("/v1/search")
-def search(payload: dict):
-    # TODO(Capstone): Lab 5 two-stage bilingual search.
-    raise NotImplementedError("Wire the semantic-search component")
+    prediction = int(np.argmax(logits, axis=-1)[0])
 
+    label = id2label.get(prediction, str(prediction)) if id2label else prediction
 
-@app.post("/v1/analyse")
-def analyse(payload: dict):
-    # TODO(Capstone): one bilingual request -> classification + entities + similar cases.
-    raise NotImplementedError("Assemble the Bayan capstone service")
+    return {
+        "label": label,
+        "label_id": prediction,
+    }
